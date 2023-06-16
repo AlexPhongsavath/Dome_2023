@@ -41,6 +41,7 @@ void setup_wifi()
   if (!res)
   {
     Serial.println("Failed to connect");
+    wm.resetSettings();
   }
   else
   {
@@ -49,20 +50,8 @@ void setup_wifi()
     Serial.println(WiFi.SSID());
     digitalWrite(WifiLED, HIGH);
   }
-//   res = wm.autoConnect(); // auto generated AP name from chipid
-//  res = wm.autoConnect("AutoConnectAP"); // anonymous ap
 }
 
-//void resetwifi()
-//{
-//  if (digitalRead(Reset) == LOW)
-//  {
-//    Serial.println("reset wifi and restart...!");
-//    wm.resetSettings();
-//    ESP.restart();
-//    digitalWrite(WifiLED, LOW);
-//  }
-//}
 
 void callback(char *topic, byte *message, unsigned int length)
 {
@@ -141,8 +130,6 @@ void loop()
     reconnect();
   }
   client.loop();
-  // resetwifi();
-  // SwAuto();
   long now = millis();
   if (now - lastMsg > 10000)
   {
