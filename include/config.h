@@ -4,7 +4,7 @@
 // #define __PRODUCTION__
 // WiFi config
 const char *ssid = "CEIT-IoT-Dome2023"; // Enter your WiFi name
-const char *password = "IoT@2023"; // Enter WiFi password
+const char *password = "IoT@2024"; // Enter WiFi password
 // client Info
 // const char *mqtt_server = "45.32.111.51";
 // const char *mqtt_server = "390acf6596d1409b8efba47ae295ef9b.s2.eu.hivemq.cloud";

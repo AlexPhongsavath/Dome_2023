@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#define DHTPIN 1 // config Dht pin
+#define DHTPIN 4 // config Dht pin
 #define WifiLED 13 // config Wifi pin
 #define MqttLED 12 // config Mqtt pin
 #define LDRPIN A0 // config LDR pin
@@ -22,17 +22,19 @@ long lastMsg = 0;
 int value = 0;
 void callback(char *topic, byte *message, unsigned int length);
 void setup_wifi();
+void connectmqtt();
 WiFiManager wm;
 bool res;
   
 void setup()
-{                  
+{  
+  Serial.begin(115200); 
+  // wm.resetSettings();               
   setup_wifi();
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
+  dht.begin();
+  //connectmqtt();
   pinMode(WifiLED, OUTPUT);
   pinMode(MqttLED, OUTPUT);
-  dht.begin();
 }
 
 void setup_wifi()
@@ -84,9 +86,11 @@ String macToStr(const uint8_t *mac)
   return result;
 }
 
-void reconnect()
+void connectmqtt()
 {
   // Loop until we're reconnected
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback); 
   while (!client.connected())
   {
     Serial.print("Attempting MQTT connection...");
@@ -103,9 +107,9 @@ void reconnect()
     Serial.println(clientName);
     // Attempt to connect
     // If you do not want to use a username and password, change next line to
-    if (client.connect((char *)clientName.c_str()),mqttUser,mqttPass)
-    {
-      // if (client.connect((char*) clientName.c_str()), mqtt_user, mqtt_password)) {
+    // if (client.connect((char *)clientName.c_str(),mqttUser,mqttPass))
+    // {
+     if  (client.connect("esp32-s", mqttUser, mqttPass)) {
       Serial.println("connected");
       digitalWrite(MqttLED, HIGH);   
     }
@@ -125,9 +129,8 @@ void reconnect()
 
 void loop()
 {
-  if (!client.connected())
-  {
-    reconnect();
+  if(!client.connected()){
+    connectmqtt();
   }
   client.loop();
   long now = millis();
@@ -169,31 +172,31 @@ void loop()
       // Serial.println(" *C ");
       Serial.println("---------------------------");
 
+      int id = 2;
+
     // Pepare String to send data as json
       String temp = String(t).c_str();
       String humi = String(h).c_str();
       String light = String(ldr).c_str();
+      String aID = String(2).c_str();
    //   String d = String(hic).c_str();
 
    //   String data_out = ""id":" 2 ","temperature":"+ a + ","humidity":" + b + ","light":" + c + "";
    //   data_out = "{\"humidity\":" + Humout + ", \"temperature\":" + Temout + "}";
       String pub_ldr =  "{\"light\":" + light + "}";
       String pub_dht =  "{\"humidity\":" + humi + ", \"temperature\":" + temp + "}";
-      String pub_data = "{\"id\":\"2\", \"humidity\":" + humi + ", \"temperature\":" + temp + ", \"light\":" + light +"}"; 
+      String pub_data = "{\"id\":"+ aID +", \"humidity\":" + humi + ", \"temperature\":" + temp + ", \"light\":" + light +"}"; 
 
       char msg_ldr[50];
       char msg_dht[50];
-      char msg_data[50];
+      char msg_data[90];
 
-      pub_ldr.toCharArray(msg_ldr, (pub_ldr.length() + 1));
-      pub_dht.toCharArray(msg_dht, (pub_dht.length() + 1));
-      pub_data.toCharArray(msg_data, (pub_data.length() + 1));
+      // pub_ldr.toCharArray(msg_ldr, (pub_ldr.length() + 1));
+      // pub_dht.toCharArray(msg_dht, (pub_dht.length() + 1));
+      pub_data.toCharArray(msg_data, (pub_data.length() +1));
 
-      if (client.publish(PUB_Topic_Ldr, msg_ldr) && client.publish(PUB_Topic_Dht, msg_dht) && client.publish(PUB_Topic_App, msg_data)) {
-        digitalWrite(MqttLED, HIGH);
-        delay(500);
-        digitalWrite(MqttLED, LOW);
-        delay(500);
-      }
-  }
+      client.publish(PUB_Topic_App, msg_data);
+
+      
+ }
 }
